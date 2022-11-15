@@ -1308,6 +1308,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "ofborg-one-off-build"
+version = "0.1.0"
+dependencies = [
+ "ofborg",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
 name = "ofborg-simple-build"
 version = "0.1.0"
 dependencies = [
