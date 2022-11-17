@@ -1,7 +1,9 @@
 /// Build attributes within a Nixpkgs PR the way that ofBorg does
+use ofborg;
 use ofborg::nix::Nix;
 use ofborg::notifyworker::SimpleNotifyWorker;
 use ofborg::tasks::build::BuildWorker;
+use ofborg::tasks::evaluate::EvaluationWorker;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     ofborg::setup_log();
@@ -17,7 +19,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     );
     let p: std::path::PathBuf = "/tmp/ofborg".into();
     let cloner = ofborg::checkout::cached_cloner(&p);
-    let worker = BuildWorker::new(
+    let worker = EvaluationWorker::new(
         cloner,
         nix,
         current_system.to_owned(),
@@ -38,15 +40,19 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         head_sha: "2af809015a65810571e7e8d8541b4ca7ba25b8d4".to_owned(),
     };
 
-    let job = ofborg::message::buildjob::BuildJob::new(
-        repo,
-        pr,
-        ofborg::commentparser::Subset::Nixpkgs,
-        /* attrs */ attrs,
-        /* logs */ None,
-        /* statusreport: */ None,
-        /*request_id: */ "one-off".to_string(),
-    );
+    let evaljob = ofborg::message::evaluationjob::EvaluationJob { repo, pr };
+
+    let job = ofborg::tasks::eval::NixpkgsStrategy::new(job, pull, issue, issue_ref, repo, gists, nix)
+
+    //let job = ofborg::message::buildjob::BuildJob::new(
+    //    repo,
+    //    pr,
+    //    ofborg::commentparser::Subset::Nixpkgs,
+    //    /* attrs */ attrs,
+    //    /* logs */ None,
+    //    /* statusreport: */ None,
+    //    /*request_id: */ "one-off".to_string(),
+    //);
 
     worker.consumer(&job, &mut dummy_receiver);
 
